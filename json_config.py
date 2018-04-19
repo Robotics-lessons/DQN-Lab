@@ -24,8 +24,11 @@ def create_dictionary(config):
     for section in config:
  #       print("Section: %s" % section)
         for options in config[section]:
+            prefix = section.strip()
+            if len(prefix) > 5:
+                prefix = prefix[0:5]
 #            print("    %s=%s" % (options, config[section][options]))
-            dict[options] = config[section][options]
+            dict[prefix + '_' + options] = config[section][options]
     return dict
 
 
