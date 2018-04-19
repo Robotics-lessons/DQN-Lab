@@ -1,0 +1,17 @@
+{
+  "Path": {
+    "Path": "~/udacity/source",
+    "Output_path": "none"
+  },
+  "Parameters": {
+    "Game_Name": "CartPole-v0",
+    "BATCH_SIZE": 128, 
+    "GAMMA": 0.999,
+    "EPS_START": 0.9,	 
+    "EPS_END": 0.05,	 
+    "EPS_DECAY": 200,	 
+    "TARGET_UPDATE": 10,	 
+    "Num_Episodes": 50,	 
+    "ReplayMemory_Size": 10000	 
+  }
+}
