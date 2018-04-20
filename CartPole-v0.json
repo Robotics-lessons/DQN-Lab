@@ -11,7 +11,7 @@
     "EPS_END": 0.05,	 
     "EPS_DECAY": 200,	 
     "TARGET_UPDATE": 10,	 
-    "Num_Episodes": 50,
+    "Num_Episodes": 60,
     "Testing": false,  	 
     "ReplayMemory_Size": 10000	 
   }
