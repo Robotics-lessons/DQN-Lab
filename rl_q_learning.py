@@ -443,8 +443,8 @@ def dqn_training(screen_width, env, num_episodes, visualize_plt=False, max_steps
             if visualize_plt:
                 img.set_data(env.render(mode='rgb_array')) # just update the data
                 plt.axis('off')
-                display.display(plt.gcf())
-                display.clear_output(wait=True)
+#                display.display(plt.gcf())
+#                display.clear_output(wait=True)
 
             if not done:
                 next_state = current_screen - last_screen
@@ -462,7 +462,7 @@ def dqn_training(screen_width, env, num_episodes, visualize_plt=False, max_steps
             if done or t>max_steps:
                 episode_durations.append(t + 1)
                 if visualize_plt:
-                    print("Duration = {}".format(t))
+                    print("Episode = %d, Duration = %d" % (i_episode + 1, t))
                 else:
                     plot_durations()
                 break
@@ -492,6 +492,11 @@ Transition = namedtuple('Transition',
 resize = T.Compose([T.ToPILImage(),
                     T.Resize(40, interpolation=Image.CUBIC),
                     T.ToTensor()])
+# set up matplotlib
+is_ipython = True # 'inline' in matplotlib.get_backend()
+print(" is_ipython = ", is_ipython)
+#if is_ipython:
+from IPython import display
 
 # Main test code
 if __name__ == "__main__":
@@ -504,14 +509,9 @@ if __name__ == "__main__":
         paramters = create_dictionary(config)
         display_dictionary(paramters)
 
-        game_file_name = 'CartPole-v0'
-        env = gym.make(game_file_name).unwrapped
-
-        # set up matplotlib
-        is_ipython = 'inline' in matplotlib.get_backend()
-        if is_ipython:
-            from IPython import display
-
+        game_file_name = paramters['Param_Game_Name']
+        env = gym.make(game_file_name).unwrapped        
+ 
         plt.ion()
         screen_width = 600
 
@@ -521,10 +521,6 @@ if __name__ == "__main__":
         #            interpolation='none')
         # plt.title('Example extracted screen')
         # plt.show()
-
-        
-
-
         # This is based on the code from gym.
 
 
@@ -536,11 +532,14 @@ if __name__ == "__main__":
         TARGET_UPDATE = paramters['Param_TARGET_UPDATE']
         ReplayMemory_Size = paramters['Param_ReplayMemory_Size']
         Testing = paramters['Param_Testing']
-        print(Testing == 'False')
-
+        num_episodes = paramters['Param_Num_Episodes']
+        model_file_name = paramters['Param_Model_File_Name']
 
         policy_net = DQN()
         target_net = DQN()
+        if Testing:
+            policy_net.load(model_file_name)
+            target_net.load(model_file_name)
         target_net.load_state_dict(policy_net.state_dict())
         target_net.eval()
 
@@ -548,6 +547,12 @@ if __name__ == "__main__":
             print('Using cuda')
             policy_net.cuda()
             target_net.cuda()
+
+        # if Testing:
+        #     num_episodes = 1
+        #     print("num_episodes = ", num_episodes)
+
+        print(Testing)
 
         optimizer = optim.RMSprop(policy_net.parameters())
         memory = ReplayMemory(ReplayMemory_Size)
@@ -557,9 +562,11 @@ if __name__ == "__main__":
 
         episode_durations = []
 
-        num_episodes = paramters['Param_Num_Episodes']
-        model = dqn_training(screen_width, env, num_episodes)
-        model.save('CartPole-v0.ckpt')
+        if Testing:
+            dqn_training(screen_width, env, num_episodes, visualize_plt=True)
+        else:
+            model = dqn_training(screen_width, env, num_episodes)
+            model.save('CartPole-v0.ckpt')
 
     except:
         print('message: ', sys.exc_info())      

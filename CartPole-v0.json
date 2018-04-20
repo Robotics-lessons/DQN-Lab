@@ -5,14 +5,15 @@
   },
   "Parameters": {
     "Game_Name": "CartPole-v0",
+    "Model_File_Name": "CartPole-v0.ckpt",
     "BATCH_SIZE": 128, 
     "GAMMA": 0.999,
     "EPS_START": 0.9,	 
     "EPS_END": 0.05,	 
     "EPS_DECAY": 200,	 
     "TARGET_UPDATE": 10,	 
-    "Num_Episodes": 20000,
-    "Testing": false,  	 
-    "ReplayMemory_Size": 20000	 
+    "Num_Episodes": 50,
+    "Testing": true,  	 
+    "ReplayMemory_Size": 10000	 
   }
 }
