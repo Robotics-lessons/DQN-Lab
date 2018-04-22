@@ -13,7 +13,7 @@
     "EPS_DECAY": 200,	 
     "TARGET_UPDATE": 10,	 
     "Num_Episodes": 50,
-    "Testing": true,  	 
+    "Testing":  false,	 
     "ReplayMemory_Size": 10000	 
   }
 }

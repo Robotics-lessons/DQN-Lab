@@ -569,4 +569,6 @@ if __name__ == "__main__":
             model.save('CartPole-v0.ckpt')
 
     except:
-        print('message: ', sys.exc_info())      
+        print('message: ', sys.exc_info()) 
+        print('Error on line {}'.format(sys.exc_info()[-1].tb_lineno)) 
+    
