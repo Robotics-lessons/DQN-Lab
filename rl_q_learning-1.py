@@ -315,10 +315,10 @@ def select_action(state):
     if sample > eps_threshold:
         action = policy_net(
             Variable(state, volatile=True).type(FloatTensor)).data.max(1)[1].view(1, 1)
-        print("policy_net  ")
+        print('*', end='')
     else:    
         action = LongTensor([[random.randrange(2)]])
-        print("random action  ")
+        print('.', end='')
     return action
 
 
@@ -331,6 +331,7 @@ def plot_durations():
     plt.xlabel('Episode')
     plt.ylabel('Duration')
     plt.plot(durations_t.numpy())
+#    print("plot_durations 1")
     # Take 100 episode averages and plot them too
     if len(durations_t) >= 100:
         means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
@@ -338,9 +339,11 @@ def plot_durations():
         plt.plot(means.numpy())
 
     plt.pause(0.001)  # pause a bit so that plots are updated
-    if is_ipython:
-        display.clear_output(wait=True)
-        display.display(plt.gcf())
+    # print("plot_durations 2")
+    # if is_ipython:
+    #     display.clear_output(wait=True)
+    #     display.display(plt.gcf())
+#    print("plot_durations 3")
 
 
 ######################################################################
@@ -441,37 +444,43 @@ def dqn_training(screen_width, env, num_episodes, visualize_plt=False, max_steps
                 action = select_action(state)
                 _, reward, done, _ = env.step(action[0, 0])
                 reward = Tensor([reward])
+#                print("reward = ", reward)
 
                 # Observe new state
                 last_screen = current_screen
                 current_screen = get_screen(screen_width)
-                if visualize_plt:
-                    img.set_data(env.render(mode='rgb_array')) # just update the data
-                    plt.axis('off')
-                    display.display(plt.gcf())
-                    display.clear_output(wait=True)
+#                print("before visualize_plt")
+                # if visualize_plt:
+                #     img.set_data(env.render(mode='rgb_array')) # just update the data
+                #     plt.axis('off')
+                #     display.display(plt.gcf())
+                #     display.clear_output(wait=True)
 
                 if not done:
                     next_state = current_screen - last_screen
                 else:
                     next_state = None
+#                print("before memory.push")
 
                 # Store the transition in memory
                 memory.push(state, action, next_state, reward)
 
                 # Move to the next state
                 state = next_state
+#                print("before optimizer")
 
                 # Perform one step of the optimization (on the target network)
                 optimize_model()
+#                print("after optimizer")
                 if done or t>max_steps:
                     episode_durations.append(t + 1)
-                    if visualize_plt:
-                        print("Episode = %d, Duration = %d" % (i_episode + 1, t))
-                    else:
+                    if not visualize_plt:                        
+#                        print("Episode = %d, Duration = %d" % (i_episode + 1, t))
+#                    else:
                         plot_durations()
                     break
             # Update the target network
+            print("Episode = %d, Duration = %d" % (i_episode + 1, t))
             if i_episode % TARGET_UPDATE == 0:
                 target_net.load_state_dict(policy_net.state_dict())
 
@@ -543,8 +552,9 @@ if __name__ == "__main__":
         if Testing:
             policy_net.load(model_file_name)
             target_net.load(model_file_name)
-        target_net.load_state_dict(policy_net.state_dict())
-        target_net.eval()
+        else:
+            target_net.load_state_dict(policy_net.state_dict())
+            target_net.eval()
 
         if use_cuda:
             print('Using cuda')
@@ -570,6 +580,9 @@ if __name__ == "__main__":
             print("Training ....")
             model = dqn_training(screen_width, env, num_episodes)
             model.save('CartPole-v0.ckpt')
+
+        print("Testing ....")
+        dqn_training(screen_width, env, 10, visualize_plt=True)
 
         env.close()
 

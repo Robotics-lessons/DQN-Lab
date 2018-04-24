@@ -10,10 +10,10 @@
     "GAMMA": 0.999,
     "EPS_START": 0.9,	 
     "EPS_END": 0.05,	 
-    "EPS_DECAY": 500,	 
+    "EPS_DECAY": 200,	 
     "TARGET_UPDATE": 10,	 
-    "Num_Episodes": 150,
-    "Testing":  false,	 
+    "Num_Episodes": 1,
+    "Testing":  true,	 
     "ReplayMemory_Size": 10000	 
   }
 }
