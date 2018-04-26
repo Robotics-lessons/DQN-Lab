@@ -1,8 +1,13 @@
+#!/usr/bin/python3
+
 import gym
 import random
 
 import numpy as np
 import tensorflow as tf
+from gym import wrappers, logger
+import matplotlib.pyplot as plt
+import torch
 
 class DQN:
   REPLAY_MEMORY_SIZE = 10000
@@ -18,6 +23,7 @@ class DQN:
   TARGET_UPDATE_FREQ = 100
   REG_FACTOR = 0.001
   LOG_DIR = '/tmp/dqn'
+  episode_durations = []
 
   def __init__(self, env):
     self.env = gym.make(env)
@@ -79,7 +85,7 @@ class DQN:
     total_steps = 0
 
     for episode in range(num_episodes):
-      print("Training: Episode = %d, Global step = %d" % (episode, total_steps))
+      print("Training: Episode = %d, Global step = %d" % (episode, total_steps), end='')
       state = self.env.reset()
       target_weights = self.session.run(self.weights)
 
@@ -143,6 +149,9 @@ class DQN:
         total_steps += 1
         if done:
           break
+      print(", duration = %d" % step)    
+      self.episode_durations.append(step + 1)
+      self.plot_durations()
 
   def play(self):
     state = self.env.reset()
@@ -156,17 +165,44 @@ class DQN:
       steps += 1
     return steps
 
+  def close(self):
+    self.env.close()
+
+  def plot_durations(self):
+    plt.figure(2)
+    plt.clf()
+    durations_t = torch.FloatTensor(self.episode_durations)
+    plt.title('Training...')
+    plt.xlabel('Episode')
+    plt.ylabel('Duration')
+#    plt.plot(durations_t.numpy())
+    plt.plot(self.episode_durations)
+    # Take 100 episode averages and plot them too
+    if len(durations_t) >= 100:
+        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
+        means = torch.cat((torch.zeros(99), means))
+        plt.plot(means.numpy(), color='r')
+
+    plt.pause(0.001)  # pause a bit so that plots are updated
+    # if is_ipython:
+    #     display.clear_output(wait=True)
+    #     display.display(plt.gcf())
+
+
 if __name__ == '__main__':
   dqn = DQN('CartPole-v0')
   dqn.init_network()
 
 #  dqn.env.monitor.start('/tmp/cartpole')
+#  dqn.env = wrappers.Monitor(dqn.env, directory='/tmp/cartpole', force=True)
   dqn.train()
  # dqn.env.monitor.close()
 
   res = []
-  for i in range(100):
+  for i in range(50):
     steps = dqn.play()
-    print("Test steps = ", steps)
+    print("Testing: Episode = %d, Test steps = %d" % (i, steps))
     res.append(steps)
   print("Mean steps = ", sum(res) / len(res))
+  dqn.close()
+
