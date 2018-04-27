@@ -1,8 +1,12 @@
+#!/usr/bin/python3
+
 import gym
 import numpy as np
 import random
 import math
 from time import sleep
+import matplotlib.pyplot as plt
+import torch
 
 
 ## Initialize the "Cart-Pole" environment
@@ -34,6 +38,8 @@ MAX_T = 250
 STREAK_TO_END = 120
 SOLVED_T = 199
 DEBUG_MODE = False # True
+
+episode_durations = []
 
 def simulate():
 
@@ -94,7 +100,8 @@ def simulate():
                break
 
             #sleep(0.25)
-
+        episode_durations.append(t + 1)
+        plot_durations()
         # It's considered done when it's solved over 120 times consecutively
         if num_streaks > STREAK_TO_END:
             break
@@ -135,6 +142,25 @@ def state_to_bucket(state):
             bucket_index = int(round(scaling*state[i] - offset))
         bucket_indice.append(bucket_index)
     return tuple(bucket_indice)
+
+
+def plot_durations():
+    plt.figure(2)
+    plt.clf()
+    durations_t = torch.FloatTensor(episode_durations)
+    plt.title('Training...')
+    plt.xlabel('Episode')
+    plt.ylabel('Duration')
+#    plt.plot(durations_t.numpy())
+    plt.plot(episode_durations)
+    # Take 100 episode averages and plot them too
+    if len(durations_t) >= 100:
+        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
+        means = torch.cat((torch.zeros(99), means))
+        plt.plot(means.numpy(), color='r')
+
+
+    plt.pause(0.001)  # pause a bit so that plots are updated
 
 if __name__ == "__main__":
     simulate()

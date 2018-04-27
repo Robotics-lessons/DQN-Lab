@@ -8,6 +8,8 @@ import tensorflow as tf
 from gym import wrappers, logger
 import matplotlib.pyplot as plt
 import torch
+import argparse
+import pickle
 
 class DQN:
   REPLAY_MEMORY_SIZE = 10000
@@ -15,7 +17,7 @@ class DQN:
   RANDOM_ACTION_DECAY = 0.99
   HIDDEN1_SIZE = 128
   HIDDEN2_SIZE = 128
-  NUM_EPISODES = 3000
+  NUM_EPISODES = 5000
   MAX_STEPS = 1000
   LEARNING_RATE = 0.0001
   MINIBATCH_SIZE = 10
@@ -24,12 +26,16 @@ class DQN:
   REG_FACTOR = 0.001
   LOG_DIR = '/tmp/dqn'
   episode_durations = []
+  SOLVED_T = 199
+  STREAK_TO_END = 100
+  TORCH_MODEL = 'simple_dqn.ckpt'
 
   def __init__(self, env):
     self.env = gym.make(env)
     assert len(self.env.observation_space.shape) == 1
     self.input_size = self.env.observation_space.shape[0]
     self.output_size = self.env.action_space.n
+    self.Q = np.zeros([self.input_size, 2])
     
   def init_network(self):
     # Inference
@@ -73,6 +79,7 @@ class DQN:
 
   def train(self, num_episodes=NUM_EPISODES):
     replay_memory = []
+    num_streaks = 0
 
     self.session = tf.Session()
 
@@ -148,17 +155,34 @@ class DQN:
 
         total_steps += 1
         if done:
+          if (step >= self.SOLVED_T):
+            num_streaks += 1
+          else:
+            num_streaks = 0
           break
       print(", duration = %d" % step)    
       self.episode_durations.append(step + 1)
       self.plot_durations()
+      if num_streaks > 2: # self.STREAK_TO_END:
+        checkpoint = {'Q': self.Q}
+        with open(self.TORCH_MODEL, 'wb') as f:
+            torch.save(checkpoint, f)
+        break
 
-  def play(self):
+  def play(self, model_file_name = ''):
     state = self.env.reset()
     done = False
     steps = 0
     while not done and steps < 200:
       self.env.render()
+      if len(model_file_name) > 0:
+        print('Load model file = ', model_file_name)
+#        self.Q = torch.load(self.TORCH_MODEL)
+        with open(model_file_name, 'rb') as f:
+          checkpoint = torch.load(f)
+        self.Q = checkpoint['Q']
+        self.Q.eval()
+       
       q_values = self.session.run(self.Q, feed_dict={self.x: [state]})
       action = q_values.argmax()
       state, _, done, _ = self.env.step(action)
@@ -183,6 +207,7 @@ class DQN:
         means = torch.cat((torch.zeros(99), means))
         plt.plot(means.numpy(), color='r')
 
+
     plt.pause(0.001)  # pause a bit so that plots are updated
     # if is_ipython:
     #     display.clear_output(wait=True)
@@ -190,17 +215,23 @@ class DQN:
 
 
 if __name__ == '__main__':
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-model', action="store", dest='model_file', default='')
+  results = parser.parse_args()
+  print('input model file = ', results.model_file)
+ # exit()
   dqn = DQN('CartPole-v0')
   dqn.init_network()
 
 #  dqn.env.monitor.start('/tmp/cartpole')
 #  dqn.env = wrappers.Monitor(dqn.env, directory='/tmp/cartpole', force=True)
-  dqn.train()
+  if len(results.model_file) == 0:
+    dqn.train()
  # dqn.env.monitor.close()
 
   res = []
   for i in range(50):
-    steps = dqn.play()
+    steps = dqn.play('simple_dqn.ckpt')
     print("Testing: Episode = %d, Test steps = %d" % (i, steps))
     res.append(steps)
   print("Mean steps = ", sum(res) / len(res))
