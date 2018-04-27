@@ -12,9 +12,10 @@
     "EPS_END": 0.05,	 
     "EPS_DECAY": 500,	
     "SOLVED_NUM": 199,
-    "STREAK_TO_END": 2, 
+    "STREAK_TO_END": 50, 
     "TARGET_UPDATE": 10,	 
     "Num_Episodes": 3000,
+    "Num_Testing": 10,
     "Testing":  false,	 
     "ReplayMemory_Size": 10000	 
   }

@@ -489,17 +489,16 @@ def dqn_training(screen_width, env, num_episodes, paramters, visualize_plt=False
                         plot_durations()
                     break
             # Update the target network
- #           print("Episode = %d, Duration = %d" % (i_episode + 1, t))
+            print("Episode = %d, Duration = %d" % (i_episode + 1, t))
             if i_episode % TARGET_UPDATE == 0:
                 target_net.load_state_dict(policy_net.state_dict())
             if num_streaks >= streak_end: 
-                print('i_episode = %d, num_streaks = %d' % (i_episode, num_streaks))
                 break
 
     except:
         print('message: ', sys.exc_info()) 
         print('Error on line {}'.format(sys.exc_info()[-1].tb_lineno))        
-
+    print('End of training, i_episode = %d, num_streaks = %d' % (i_episode, num_streaks))
     return target_net
 
 
@@ -558,6 +557,7 @@ if __name__ == "__main__":
         Testing = paramters['Param_Testing']
         num_episodes = paramters['Param_Num_Episodes']
         model_file_name = paramters['Param_Model_File_Name']
+        num_testing = paramters['Param_Num_Testing']
 
 
         policy_net = DQN()
@@ -587,14 +587,14 @@ if __name__ == "__main__":
 
         if Testing:
             print("Testing ....")
-            dqn_training(screen_width, env, num_episodes, paramters, visualize_plt=True)
+            dqn_training(screen_width, env, num_testing, paramters, visualize_plt=True)
         else:
             print("Training ....")
             model = dqn_training(screen_width, env, num_episodes, paramters)
             model.save('CartPole-v0.ckpt')
 
-        print("Testing ....")
-        dqn_training(screen_width, env, 10, paramters, visualize_plt=True)
+        # print("Testing ....")
+        # dqn_training(screen_width, env, 10, paramters, visualize_plt=True)
 
         input("Press Enter to continue...")
         env.close()
